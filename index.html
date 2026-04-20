@@ -105,6 +105,563 @@
   </div>
 </div>
 
+<button class="btn-flip" id="flip-btn" onclick="flip()">Reveal answer</button>
+<div class="btn-row" id="btn-row" style="display:none;">
+  <button class="btn btn-nope" onclick="next(false)">Need practice</button>
+  <button class="btn btn-got" onclick="next(true)">Got it</button>
+</div>
+<div class="done-screen" id="done" style="display:none;">
+  <h2 id="done-title"></h2>
+  <p id="done-sub"></p>
+  <button class="restart-btn" onclick="restart()">Restart deck</button>
+</div>
+
+<script>
+const ALL = [
+
+  // ── DISPROPORTIONATION ──
+  { cat:"disproportionation", cl:"c-disp",
+    f:"X₂ + OH⁻ → ? (X = Cl, Br, I — basic medium)",
+    fs:"Halogens in alkali",
+    b:"X⁻ + XO₃⁻", bs:"0 → -1 and +5",
+    n:"F₂ does NOT disproportionate — no d-orbitals, most electronegative" },
+
+  { cat:"disproportionation", cl:"c-disp",
+    f:"Br₂ + NaOH/KOH (hot conc.) → ?",
+    fs:"",
+    b:"Br⁻ + BrO₃⁻ (bromate ion)", bs:"",
+    n:"Hot conc → XO₃⁻. Cold dilute → X⁻ + XO⁻ (hypohalite). Same rxn in acidic medium = comproportionation." },
+
+  { cat:"disproportionation", cl:"c-disp",
+    f:"P₄ (white) + NaOH/KOH/Ca(OH)₂ + H₂O → ?",
+    fs:"",
+    b:"PH₃↑ (phosphene) + H₂PO₂⁻ (hypophosphite)", bs:"P: 0 → -3 and +1",
+    n:"Only white phosphorus does this. Red/black do not." },
+
+  { cat:"disproportionation", cl:"c-disp",
+    f:"S + OH⁻ → ? (heat)",
+    fs:"Sulphur in base",
+    b:"S²⁻ + S₂O₃²⁻ (thiosulphate)", bs:"S: 0 → -2 and +2",
+    n:"" },
+
+  { cat:"disproportionation", cl:"c-disp",
+    f:"ClO₂ + H₂O → ?",
+    fs:"Mixed oxide (Cl in +4)",
+    b:"HClO₂ + HClO₃", bs:"+4 → +3 and +5",
+    n:"NO₂ + H₂O → HNO₂ + HNO₃ (same pattern)" },
+
+  { cat:"disproportionation", cl:"c-disp",
+    f:"ClO₃ or Cl₂O₆ + KOH → ?",
+    fs:"",
+    b:"KClO₃ + KClO₄", bs:"",
+    n:"" },
+
+  // ── HYDROLYSIS — HALOGEN GROUP ──
+  { cat:"hydrolysis-halogens", cl:"c-hydro",
+    f:"ClF₃ + H₂O → ?",
+    fs:"Interhalogen hydrolysis: small halogen = HF, large = oxyacid",
+    b:"HF + HClO₂", bs:"",
+    n:"Rule: hydrolysis of interhalogens → HF (small halogen) + oxyacid of larger halogen" },
+
+  { cat:"hydrolysis-halogens", cl:"c-hydro",
+    f:"BrF₅ + H₂O → ?",
+    fs:"",
+    b:"HF + HBrO₃", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-halogens", cl:"c-hydro",
+    f:"I₂Cl₆ + H₂O → ?",
+    fs:"",
+    b:"HCl + HIO₂", bs:"I is +3 here",
+    n:"" },
+
+  { cat:"hydrolysis-halogens", cl:"c-hydro",
+    f:"IF₅ + H₂O → ?",
+    fs:"",
+    b:"HF + HIO₃", bs:"I is +5",
+    n:"" },
+
+  { cat:"hydrolysis-halogens", cl:"c-hydro",
+    f:"IF₇ + H₂O → ?",
+    fs:"",
+    b:"HF + HIO₄ → (+ 2H₂O) → H₅IO₆", bs:"H₅IO₆ is the final product (octahedral I)",
+    n:"IF₇ is the only one giving H₅IO₆ via HIO₄ intermediate" },
+
+  // ── HYDROLYSIS — NOBLE GASES ──
+  { cat:"hydrolysis-noble", cl:"c-hydro",
+    f:"XeF₂ + H₂O → ?",
+    fs:"Noble gas fluoride hydrolysis",
+    b:"Xe↑ + O₂↑ + HF", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-noble", cl:"c-hydro",
+    f:"XeF₄ + H₂O → ?",
+    fs:"",
+    b:"XeO₃ + Xe + O₂ + HF", bs:"Disproportionation during hydrolysis",
+    n:"" },
+
+  { cat:"hydrolysis-noble", cl:"c-hydro",
+    f:"XeF₆ + H₂O → ?",
+    fs:"",
+    b:"XeO₃ + HF", bs:"",
+    n:"" },
+
+  // ── HYDROLYSIS — OXY HALIDES ──
+  { cat:"hydrolysis-oxyhalides", cl:"c-hydro",
+    f:"SOCl₂ + H₂O → ?",
+    fs:"Oxy halide hydrolysis",
+    b:"H₂SO₃ + HCl", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-oxyhalides", cl:"c-hydro",
+    f:"SO₂Cl₂ + HCl → ?",
+    fs:"",
+    b:"H₂SO₄ + HCl", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-oxyhalides", cl:"c-hydro",
+    f:"POCl₃ + H₂O → ?",
+    fs:"",
+    b:"H₃PO₄ + HCl", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-oxyhalides", cl:"c-hydro",
+    f:"NOCl + H₂O → ?",
+    fs:"",
+    b:"HNO₂ + HCl", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-oxyhalides", cl:"c-hydro",
+    f:"(CrO₂Cl)₂ + H₂O → ?",
+    fs:"Chromyl chloride",
+    b:"H₂Cr₂O₇ + HCl", bs:"",
+    n:"" },
+
+  // ── HYDROLYSIS — OXYGEN GROUP ──
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"S₂Cl₂ / S₂F₂ + H₂O → ?",
+    fs:"Disulphur dihalide",
+    b:"S↓ + SO₂ + HCl/HF", bs:"Disproportionation",
+    n:"" },
+
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"SCl₂ / SF₂ + H₂O → ?",
+    fs:"",
+    b:"S↓ + SO₂↑ + HCl/HF", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"SF₄ + H₂O → ?",
+    fs:"",
+    b:"SO₂ + HF", bs:"",
+    n:"SF₆ is INERT to hydrolysis — 6 F atoms cause steric hindrance blocking attack" },
+
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"SeF₄ + H₂O → ?",
+    fs:"",
+    b:"SeO₂ + HF", bs:"",
+    n:"" },
+
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"SeF₆ + H₂O → ?",
+    fs:"",
+    b:"H₂SeO₄ (selenic acid) via unstable H₆SeO₆", bs:"H₆SeO₆ − 2H₂O → H₂SeO₄",
+    n:"SeF₆ does hydrolyse unlike SF₆ — Se is larger so less steric protection" },
+
+  { cat:"hydrolysis-S/Se/Te", cl:"c-hydro",
+    f:"TeF₆ + H₂O → ?",
+    fs:"",
+    b:"H₆TeO₆ (exists — stable due to large Te)", bs:"Telluric acid — octahedral Te",
+    n:"Te is large enough to accommodate 6 OH groups — H₆TeO₆ is stable, unlike H₆SeO₆" },
+
+  // ── HYDROLYSIS — NITROGEN GROUP ──
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"NX₃ + H₂O → ? (X = Cl/Br/I)",
+    fs:"Nitrogen trihalide",
+    b:"NH₃ + HOX (hypohalous acid)", bs:"",
+    n:"NF₃ undergoes negligible hydrolysis — almost non-polar (electronegativity difference ≈ 0)" },
+
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"PCl₃ + H₂O → ?",
+    fs:"",
+    b:"H₃PO₃ + HCl", bs:"P is +3",
+    n:"" },
+
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"PCl₅ + excess H₂O → ?",
+    fs:"",
+    b:"H₃PO₄ + HCl", bs:"P is +5",
+    n:"With small/moisture amount of water: PCl₅ + H₂O → POCl₃ + HCl (then + more H₂O → H₃PO₄)" },
+
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"AsCl₃ + H₂O → ?",
+    fs:"",
+    b:"H₃AsO₃ + HCl", bs:"As is +3, white ppt",
+    n:"" },
+
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"SbCl₃ + H₂O → ?",
+    fs:"Partial hydrolysis",
+    b:"SbO⁺Cl⁻ + HCl", bs:"White ppt",
+    n:"" },
+
+  { cat:"hydrolysis-N/P", cl:"c-hydro",
+    f:"BiCl₃ + H₂O → ?",
+    fs:"Partial hydrolysis",
+    b:"BiO⁺Cl⁻ + HCl", bs:"White ppt, turbid (1:1)",
+    n:"" },
+
+  // ── HYDROLYSIS — CARBON GROUP ──
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"CF₄ / CCl₄ / CHCl₃ + H₂O → ?",
+    fs:"Carbon tetrahalides",
+    b:"No reaction", bs:"",
+    n:"Absence of vacant p-orbital in valence shell — cannot be attacked by water" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"CCl₄ + superheated steam → ?",
+    fs:"H₂O(g), heat",
+    b:"COCl₂ (phosgene) + HCl", bs:"Phosgene is a poisonous gas",
+    n:"" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"SiCl₄ + H₂O → ?",
+    fs:"Easily hydrolysed — has vacant 3d orbital",
+    b:"H₄SiO₄ + HCl → (−H₂O) → (H₂SiO₃)ₙ", bs:"Meta silicic acid — polymeric gel-like",
+    n:"Si has vacant d-orbitals unlike C, so water can attack" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"SiF₄ + 4H₂O → ?",
+    fs:"Partial hydrolysis",
+    b:"H₄SiO₄ + 4HF", bs:"Orthosilicic acid",
+    n:"Instep: SiF₄ + 3H₂O → H₂SiO₃; 2SiF₄ + 4HF → 2H₂SiF₆; net: 3SiF₄ + 3H₂O → H₂SiO₃ + 2H₂SiF₆" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"SnCl₄ + H₂O → ?",
+    fs:"",
+    b:"H₂SnO₃ + 4HCl", bs:"Meta stannic acid",
+    n:"" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"SnCl₂ + H₂O ⇌ ?",
+    fs:"Incomplete hydrolysis",
+    b:"Sn(OH)Cl + HCl", bs:"White ppt",
+    n:"" },
+
+  { cat:"hydrolysis-C/Si", cl:"c-hydro",
+    f:"PbCl₄ + H₂O → ?",
+    fs:"",
+    b:"PbO₂ + HCl", bs:"",
+    n:"PbCl₂ is insoluble — does not hydrolyse" },
+
+  // ── HYDROLYSIS — BORON GROUP ──
+  { cat:"hydrolysis-boron", cl:"c-hydro",
+    f:"BX₃ + 3H₂O → ? (X = Cl/Br/I)",
+    fs:"Boron trihalide — complete hydrolysis",
+    b:"H₃BO₃ + 3HX", bs:"B(OH)₃",
+    n:"BBCl₃ does NOT exist — 4 Cl atoms cause steric hindrance around small B" },
+
+  { cat:"hydrolysis-boron", cl:"c-hydro",
+    f:"BF₃ + 3H₂O → ? then what?",
+    fs:"Partial hydrolysis",
+    b:"H₃BO₃ + 3HF; then 3BF₃ + 3HF → 3HBF₄", bs:"Net: 4BF₃ + 3H₂O → H₃BO₃ + 3HBF₄ (1:3 ratio)",
+    n:"BF₃ + KF → K⁺BF₄⁻" },
+
+  { cat:"hydrolysis-boron", cl:"c-hydro",
+    f:"AlCl₃ + H₂O → ?",
+    fs:"",
+    b:"Al(OH)₃ + HCl", bs:"",
+    n:"" },
+
+  // ── HYDROLYSIS — METAL OXIDES ──
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"Metal oxide + H₂O: which are soluble?",
+    fs:"",
+    b:"Na⁺ to Cs⁺ (soluble); Ba²⁺, Sr²⁺, Ca²⁺ (partially soluble)", bs:"Most others are insoluble",
+    n:"Metal oxides with metal in high OS (≥5) are water soluble and form strong acids" },
+
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"CrO₃ + H₂O → ?",
+    fs:"Cr in +6 (≥5)",
+    b:"H₂CrO₄", bs:"Strong acid",
+    n:"" },
+
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"MnO₃ / Mn₂O₇ + H₂O → ?",
+    fs:"Mn in high OS",
+    b:"H₂MnO₄ / HMnO₄", bs:"Strong acids",
+    n:"" },
+
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"V₂O₅ + H₂O → ?",
+    fs:"",
+    b:"(HVO₃)ₙ — polymeric", bs:"",
+    n:"" },
+
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"Bi₂O₅ + H₂O → ?",
+    fs:"",
+    b:"HBiO₃", bs:"",
+    n:"" },
+
+  { cat:"metal-oxides", cl:"c-hydro",
+    f:"N₂O₅ + H₂O → ?",
+    fs:"",
+    b:"HNO₃", bs:"",
+    n:"N₂O₅ + NaOH → NaNO₃. Reversible (non-metal oxides only)" },
+
+  // ── HEATING EFFECTS — CARBONATES & BICARBONATES ──
+  { cat:"heating-carbonates", cl:"c-heat",
+    f:"M₂CO₃ on heating? (M = Na/K/Rb/Cs)",
+    fs:"Alkali metal carbonates",
+    b:"No decomposition", bs:"",
+    n:"Exception: Li₂CO₃ → Li₂O + CO₂↑ (diagonal relationship with Mg²⁺)" },
+
+  { cat:"heating-carbonates", cl:"c-heat",
+    f:"MCO₃ on heating? (M = alkaline earth / Ca / Pb etc.)",
+    fs:"",
+    b:"MO + CO₂↑", bs:"eg: CaCO₃ → CaO + CO₂; PbCO₃ → PbO + CO₂",
+    n:"" },
+
+  { cat:"heating-carbonates", cl:"c-heat",
+    f:"2MHCO₃ on heating? (M = Na/K/Rb/Cs)",
+    fs:"Alkali metal bicarbonates",
+    b:"M₂CO₃ + CO₂↑ + H₂O↑", bs:"",
+    n:"If aq NaHCO₃ used instead of solid, liquid water is formed" },
+
+  { cat:"heating-carbonates", cl:"c-heat",
+    f:"Mg(HCO₃)₂ on heating → ?",
+    fs:"",
+    b:"Mg(OH)₂↓ + H₂O + CO₂", bs:"Solubility of Mg(OH)₂ < MgCO₃",
+    n:"" },
+
+  { cat:"heating-carbonates", cl:"c-heat",
+    f:"Ag₂CO₃ on heating → ?",
+    fs:"",
+    b:"2Ag + CO₂↑ + O₂↑", bs:"Same with Hg",
+    n:"" },
+
+  // ── HEATING EFFECTS — NITRATES ──
+  { cat:"heating-nitrates", cl:"c-heat",
+    f:"MNO₃ on heating? (M = K/Rb/Cs)",
+    fs:"",
+    b:"MNO₂ + O₂↑", bs:"",
+    n:"" },
+
+  { cat:"heating-nitrates", cl:"c-heat",
+    f:"LiNO₃ on heating → ?",
+    fs:"",
+    b:"Li₂O + NO₂↑ + O₂↑", bs:"",
+    n:"Li behaves like Mg (diagonal relationship)" },
+
+  { cat:"heating-nitrates", cl:"c-heat",
+    f:"NaNO₃ on heating → ?",
+    fs:"",
+    b:"<500°C: NaNO₂ + O₂; >500°C: Na₂O + N₂↑ + O₂↑", bs:"",
+    n:"" },
+
+  { cat:"heating-nitrates", cl:"c-heat",
+    f:"M(NO₃)₂ on heating? (M = Ca/Zn/Pb/Mg/Cu/Be/Sn/Ba)",
+    fs:"",
+    b:"MO(s) + NO₂↑ + O₂↑", bs:"",
+    n:"" },
+
+  // ── HEATING EFFECTS — SULPHATES ──
+  { cat:"heating-sulphates", cl:"c-heat",
+    f:"M₂SO₄ on heating? (M = Na/K/Rb/Cs)",
+    fs:"",
+    b:"No decomposition", bs:"",
+    n:"Li₂SO₄ → Li₂O + SO₃↑" },
+
+  { cat:"heating-sulphates", cl:"c-heat",
+    f:"MSO₄ on heating? (M = Be/Mg/Ca/Sr/Cu/Zn)",
+    fs:"",
+    b:"MO + SO₃↑ → (>800°C) SO₂ + O₂", bs:"",
+    n:"" },
+
+  { cat:"heating-sulphates", cl:"c-heat",
+    f:"Ag₂SO₄ on heating → ?",
+    fs:"",
+    b:"Ag + SO₃↑ + O₂↑", bs:"Same with HgSO₄",
+    n:"Salts of Ag, Hg and their oxides decompose on heating" },
+
+  { cat:"heating-sulphates", cl:"c-heat",
+    f:"FeSO₄ on heating → ?",
+    fs:"",
+    b:"Fe₂O₃ + SO₂↑ + SO₃↑", bs:"",
+    n:"Fe₂(SO₄)₃ → Fe₂O₃ + SO₃↑" },
+
+  // ── HEATING EFFECTS — OXALATES ──
+  { cat:"heating-oxalates", cl:"c-heat",
+    f:"Na₂C₂O₄ on heating → ?",
+    fs:"",
+    b:"Na₂CO₃ + CO↑", bs:"",
+    n:"" },
+
+  { cat:"heating-oxalates", cl:"c-heat",
+    f:"CaC₂O₄ on heating → ?",
+    fs:"",
+    b:"CaO + 2CO₂ + CO↑ (via CaCO₃ intermediate)", bs:"CaC₂O₄ → CaCO₃ → CaO + CO₂ (+ O₂)",
+    n:"" },
+
+  { cat:"heating-oxalates", cl:"c-heat",
+    f:"Ag₂C₂O₄ on heating → ?",
+    fs:"",
+    b:"Ag(s) + 2CO₂↑", bs:"Via AgCO₃ → AgO → CO₂+O₂",
+    n:"" },
+
+  // ── HEATING EFFECTS — MISC OXIDES ──
+  { cat:"heating-oxides", cl:"c-heat",
+    f:"K₂Cr₂O₇ on heating → ?",
+    fs:"",
+    b:"Cr₂O₃ + K₂CrO₄ + O₂↑", bs:"",
+    n:"" },
+
+  { cat:"heating-oxides", cl:"c-heat",
+    f:"KMnO₄ on heating → ?",
+    fs:"",
+    b:"MnO₂ + K₂MnO₄ + O₂↑", bs:"",
+    n:"" },
+
+  { cat:"heating-oxides", cl:"c-heat",
+    f:"PbO₂ on heating → ?",
+    fs:"",
+    b:"PbO + O₂↑", bs:"",
+    n:"Pb₃O₄ → PbO + O₂↑" },
+
+  { cat:"heating-oxides", cl:"c-heat",
+    f:"MnO₂ on heating → ?",
+    fs:"",
+    b:"Mn₃O₄ + O₂↑ (Mn₂O₃ intermediate)", bs:"",
+    n:"Ag₂O → Ag + O₂↑; HgO → Hg(l) + O₂↑" },
+
+  { cat:"heating-oxides", cl:"c-heat",
+    f:"Al₂O₃ / ZnO / CuO / MgO / Fe₂O₃ on heating → ?",
+    fs:"",
+    b:"No decomposition", bs:"",
+    n:"Au₂O₃ / PtO₂ decompose at room temperature" },
+
+  // ── HEATING — AMMONIUM SALTS ──
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄X on heating? (X = Cl/Br/I)",
+    fs:"Ammonium halides",
+    b:"NH₃↑ + HX↑", bs:"",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"(NH₄)₂SO₄ on heating → ?",
+    fs:"",
+    b:"2NH₃ + H₂SO₄", bs:"",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄HS on heating → ?",
+    fs:"",
+    b:"NH₃ + H₂S", bs:"",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄NO₂ on heating → ?",
+    fs:"Anion is oxidising",
+    b:"N₂↑ + 2H₂O↑", bs:"OS of N: +3 and -3 → 0",
+    n:"Thermal decomp — anion oxidising → N₂ or N₂O as product" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄NO₃ on heating → ?",
+    fs:"",
+    b:"N₂O↑ + H₂O↑", bs:"N: +5 and -3 → +1",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"N₂H₅NO₂ on heating → ?",
+    fs:"Hydrazinium nitrite",
+    b:"HN₃ + H₂O (hydrazoic acid — explosive!)", bs:"H−N=N=N",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄ClO₄ on heating → ?",
+    fs:"",
+    b:"N₂↑ + Cl₂↑ + O₂↑ + H₂O↑", bs:"",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"NH₄IO₃ on heating → ?",
+    fs:"",
+    b:"N₂↑ + H₂O↑ + I₂ + O₂", bs:"",
+    n:"" },
+
+  { cat:"heating-NH4", cl:"c-heat",
+    f:"(NH₄)₂Cr₂O₇ on heati  .card-inner { position: relative; width: 100%; min-height: 210px; transform-style: preserve-3d; transition: transform 0.4s ease; }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .face { position: absolute; width: 100%; min-height: 210px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: center; }
+  .front { background: #fff; border: 1px solid #e8e8e0; }
+  .back { background: #f0f7ff; border: 1px solid #b5d4f4; transform: rotateY(180deg); }
+  .face-tag { font-size: 10px; color: #aaa; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; }
+  .face-main { font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.55; margin-bottom: 6px; }
+  .face-sub { font-size: 12px; color: #666; line-height: 1.5; }
+  .face-hint { font-size: 10px; color: #ccc; margin-top: 12px; text-align: center; }
+  .face-note { font-size: 11px; color: #185FA5; background: #E6F1FB; border-radius: 7px; padding: 7px 10px; margin-top: 10px; line-height: 1.5; }
+  .cat-badge { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 99px; font-weight: 500; margin-bottom: 8px; }
+
+  .btn-flip { display: block; width: 100%; max-width: 600px; margin: 0 auto 0.6rem; font-size: 13px; padding: 9px; border-radius: 10px; border: 1px solid #b5d4f4; background: #f0f7ff; color: #185FA5; cursor: pointer; font-weight: 500; }
+  .btn-row { display: flex; gap: 8px; justify-content: center; max-width: 600px; margin: 0 auto 0.75rem; }
+  .btn { font-size: 13px; padding: 9px 22px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-weight: 500; flex: 1; }
+  .btn-got { border-color: #1D9E75; color: #0F6E56; background: #f0fdf7; }
+  .btn-nope { border-color: #D85A30; color: #993C1D; background: #fdf3f0; }
+
+  .done-screen { text-align: center; padding: 2.5rem 1rem; max-width: 380px; margin: 0 auto; }
+  .done-screen h2 { font-size: 20px; margin-bottom: 6px; }
+  .done-screen p { color: #666; font-size: 13px; margin-bottom: 1.25rem; line-height: 1.5; }
+  .restart-btn { font-size: 13px; padding: 9px 24px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+
+  /* category colours */
+  .c-disp { background: #FAEEDA; color: #633806; }
+  .c-hydro { background: #EAF3DE; color: #3B6D11; }
+  .c-heat { background: #FCEBEB; color: #A32D2D; }
+  .c-redox { background: #EEEDFE; color: #3C3489; }
+  .c-misc { background: #E1F5EE; color: #085041; }
+  .c-acid { background: #FAECE7; color: #712B13; }
+  .c-dehy { background: #F1EFE8; color: #5F5E5A; }
+</style>
+</head>
+<body>
+
+<h1>GIC Flashcards</h1>
+<p class="subtitle">General Inorganic Chemistry — JEE Advanced 2026</p>
+
+<div class="filter-row" id="filters"></div>
+
+<div class="score-row">
+  <span class="pill p-got" id="s-got">Got: 0</span>
+  <span class="pill p-nope" id="s-nope">Practice: 0</span>
+  <span class="pill p-left" id="s-left">Left: 0</span>
+</div>
+
+<div class="top-bar">
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-text" id="prog-text">1 / ?</div>
+</div>
+
+<div class="card-area">
+  <div class="card-wrap" onclick="flip()">
+    <div class="card-inner" id="card-inner">
+      <div class="face front">
+        <div class="cat-badge" id="f-cat"></div>
+        <div class="face-tag">Reactant / Condition</div>
+        <div class="face-main" id="f-main"></div>
+        <div class="face-sub" id="f-sub"></div>
+        <div class="face-hint">Tap to reveal →</div>
+      </div>
+      <div class="face back">
+        <div class="face-tag">Product / Key point</div>
+        <div class="face-main" id="b-main"></div>
+        <div class="face-sub" id="b-sub"></div>
+        <div class="face-note" id="b-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="btn-row" id="btn-row" style="display:none;">
   <button class="btn btn-nope" onclick="next(false)">Need practice</button>
   <button class="btn btn-got" onclick="next(true)">Got it</button>
