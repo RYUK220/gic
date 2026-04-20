@@ -105,19 +105,13 @@
   </div>
 </div>
 
-<button class="btn-flip" id="flip-btn" onclick="flip()">Reveal answer</button>
 <div class="btn-row" id="btn-row" style="display:none;">
   <button class="btn btn-nope" onclick="next(false)">Need practice</button>
   <button class="btn btn-got" onclick="next(true)">Got it</button>
-</div>
-<div class="done-screen" id="done" style="display:none;">
-  <h2 id="done-title"></h2>
-  <p id="done-sub"></p>
-  <button class="restart-btn" onclick="restart()">Restart deck</button>
+  <button class="btn" onclick="showWrong()">Revise Wrong</button>
 </div>
 
 <script>
- let wrongSet = new Set(JSON.parse(localStorage.getItem("wrongSet")) || []);
 const ALL = [
 
   // ── DISPROPORTIONATION ──
@@ -837,7 +831,7 @@ function flip(){
 }
 
 function next(g){
-  const currentCard = filtered[cur].f;
+  const currentCard = filtered[cur].id;
 
   if(g){
     got++;
@@ -853,6 +847,12 @@ function next(g){
   render();
 }
 
+ function showWrong(){
+  const saved = JSON.parse(localStorage.getItem("wrongSet")) || [];
+  filtered = ALL.filter(c => saved.includes(c.id));
+  restart();
+ }
+ 
 function updateStats(){
   const left=filtered.length-cur;
   document.getElementById('s-got').textContent='Got: '+got;
