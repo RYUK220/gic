@@ -779,6 +779,9 @@ const ALL = [
 
 const CATS = [...new Set(ALL.map(c=>c.cat))];
 let filtered=[...ALL], cur=0, got=0, nope=0, flipped=false;
+ 
+ let wrongSet = new Set(JSON.parse(localStorage.getItem("wrongSet")) || []);
+ALL.forEach((c, i) => c.id = i);
 
 function buildFilters(){
   const fr=document.getElementById('filters');
