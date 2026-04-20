@@ -117,6 +117,7 @@
 </div>
 
 <script>
+ let wrongSet = new Set(JSON.parse(localStorage.getItem("wrongSet")) || []);
 const ALL = [
 
   // ── DISPROPORTIONATION ──
@@ -836,8 +837,20 @@ function flip(){
 }
 
 function next(g){
-  if(g)got++;else nope++;
-  cur++;render();
+  const currentCard = filtered[cur].f;
+
+  if(g){
+    got++;
+    wrongSet.delete(currentCard);
+  } else {
+    nope++;
+    wrongSet.add(currentCard);
+  }
+
+  localStorage.setItem("wrongSet", JSON.stringify([...wrongSet]));
+
+  cur++;
+  render();
 }
 
 function updateStats(){
